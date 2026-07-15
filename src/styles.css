@@ -56,16 +56,7 @@ p { color: var(--muted); line-height: 1.55; }
 .app-header h1 { color: white; }
 .app-header .eyebrow { color: #a9c2ba; margin-bottom: 0.2rem; }
 
-.brand-mark {
-  display: grid;
-  place-items: center;
-  flex: 0 0 48px;
-  height: 48px;
-  border-radius: 14px;
-  font: 800 1.55rem 'Avenir Next', Avenir, sans-serif;
-  background: var(--accent);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
-}
+.brand-logo { flex: 0 0 auto; width: 132px; height: 52px; object-fit: contain; }
 
 .save-status {
   margin-left: auto;
@@ -312,7 +303,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
 
 @media (max-width: 640px) {
   .app-header { min-height: 82px; padding-inline: 1rem; }
-  .brand-mark { flex-basis: 42px; height: 42px; }
+  .brand-logo { width: 98px; height: 42px; }
   .save-status { font-size: 0; padding: 0.45rem; }
   .save-status::before { margin: 0; font-size: 0.8rem; }
   .current-user { display: none; }

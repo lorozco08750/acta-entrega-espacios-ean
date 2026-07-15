@@ -42,12 +42,22 @@ function drawWrapped(page, text, options) {
   return y - lines.length * lineHeight;
 }
 
-function drawHeader(page, fonts, title = 'ACTA DE ENTREGA DE ESPACIOS') {
+function drawHeader(page, fonts, logo, title = 'ACTA DE ENTREGA DE ESPACIOS') {
   page.drawRectangle({ x: 0, y: PAGE[1] - 92, width: PAGE[0], height: 92, color: BRAND });
-  page.drawRectangle({ x: MARGIN, y: PAGE[1] - 69, width: 42, height: 42, color: ACCENT });
-  page.drawText('E', { x: MARGIN + 13, y: PAGE[1] - 59, font: fonts.bold, size: 25, color: rgb(1, 1, 1) });
-  page.drawText(title, { x: MARGIN + 58, y: PAGE[1] - 48, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
-  page.drawText('GESTIÓN DE EVENTOS', { x: MARGIN + 58, y: PAGE[1] - 65, font: fonts.regular, size: 8, color: rgb(0.8, 0.88, 0.86) });
+  page.drawText(title, { x: MARGIN, y: PAGE[1] - 45, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
+  page.drawText('GESTIÓN DE EVENTOS', { x: MARGIN, y: PAGE[1] - 64, font: fonts.regular, size: 8, color: rgb(0.8, 0.88, 0.86) });
+  if (logo) {
+    const dimensions = fitImage(logo, 112, 48);
+    page.drawImage(logo, {
+      x: PAGE[0] - MARGIN - dimensions.width,
+      y: PAGE[1] - 70,
+      width: dimensions.width,
+      height: dimensions.height,
+    });
+  } else {
+    page.drawRectangle({ x: PAGE[0] - MARGIN - 42, y: PAGE[1] - 69, width: 42, height: 42, color: ACCENT });
+    page.drawText('E', { x: PAGE[0] - MARGIN - 29, y: PAGE[1] - 59, font: fonts.bold, size: 25, color: rgb(1, 1, 1) });
+  }
 }
 
 function drawFooter(page, fonts, pageNumber) {
@@ -73,7 +83,21 @@ function fitImage(image, maxWidth, maxHeight) {
   return { width: image.width * scale, height: image.height * scale };
 }
 
-export async function createActaPdf(data) {
+async function loadHeaderLogo(pdf, suppliedBytes) {
+  try {
+    let bytes = suppliedBytes;
+    if (!bytes && typeof window !== 'undefined') {
+      const response = await fetch('/logo-ean-blanco.png');
+      if (!response.ok) return null;
+      bytes = new Uint8Array(await response.arrayBuffer());
+    }
+    return bytes ? pdf.embedPng(bytes) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function createActaPdf(data, options = {}) {
   const pdf = await PDFDocument.create();
   const fonts = {
     regular: await pdf.embedFont(StandardFonts.Helvetica),
@@ -83,10 +107,11 @@ export async function createActaPdf(data) {
   pdf.setSubject('Acta de entrega de espacios');
   pdf.setCreator('Aplicación Acta de Entrega de Espacios');
   pdf.setCreationDate(new Date());
+  const headerLogo = await loadHeaderLogo(pdf, options.logoBytes);
 
   let pageNumber = 1;
   let page = pdf.addPage(PAGE);
-  drawHeader(page, fonts);
+  drawHeader(page, fonts, headerLogo);
   let y = PAGE[1] - 132;
   page.drawText('INFORMACIÓN DE LA ENTREGA', { x: MARGIN, y, font: fonts.bold, size: 12, color: BRAND });
   y -= 30;
@@ -108,7 +133,7 @@ export async function createActaPdf(data) {
     for (let photoIndex = 0; photoIndex < space.photos.length; photoIndex += 1) {
       pageNumber += 1;
       page = pdf.addPage(PAGE);
-      drawHeader(page, fonts, `EVIDENCIA · ESPACIO ${spaceIndex + 1}`);
+      drawHeader(page, fonts, headerLogo, `EVIDENCIA · ESPACIO ${spaceIndex + 1}`);
       let currentY = PAGE[1] - 128;
       page.drawText(clean(space.name).toUpperCase(), { x: MARGIN, y: currentY, font: fonts.bold, size: 18, color: BRAND });
       page.drawText(`Fotografía ${photoIndex + 1} de ${space.photos.length}`, { x: PAGE[0] - MARGIN - 95, y: currentY + 2, font: fonts.regular, size: 9, color: MUTED });
@@ -134,7 +159,7 @@ export async function createActaPdf(data) {
 
   pageNumber += 1;
   page = pdf.addPage(PAGE);
-  drawHeader(page, fonts, 'ACEPTACIÓN Y FIRMAS');
+  drawHeader(page, fonts, headerLogo, 'ACEPTACIÓN Y FIRMAS');
   y = PAGE[1] - 132;
   page.drawText('OBSERVACIONES GENERALES', { x: MARGIN, y, font: fonts.bold, size: 8, color: MUTED });
   y = drawWrapped(page, data.observacionesGenerales || 'Sin observaciones adicionales.', { x: MARGIN, y: y - 18, font: fonts.regular, size: 10, maxWidth: PAGE[0] - MARGIN * 2 });
