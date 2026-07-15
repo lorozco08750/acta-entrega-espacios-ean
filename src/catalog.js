@@ -1,0 +1,25 @@
+export const SPACES = [
+  'Auditorio Orígenes',
+  'Auditorio Fundadores',
+  'Auditorio Nativos',
+  'Aula Múltiple',
+  'Magistral Fundadores',
+  'Puente Piso 2',
+  'Sala de Emprendimiento 1',
+  'Sala de Emprendimiento 2',
+  'Mesa Redonda',
+  'Cafetería',
+  'Plazoleta',
+  'Atrio + Lobby Edificio Legacy',
+  'Lobby Fundadores',
+  'BallPit',
+  'Terraza Piso 6',
+  'Salones de clase',
+  'Ingreso servicios al estudiante y aspirantes',
+  'Terraza Canopi',
+  'Ean Arena',
+  'Salones de Expresión',
+  'Entrada Recepción Calle 79',
+];
+
+export const CUSTOM_SPACE_VALUE = '__otro__';

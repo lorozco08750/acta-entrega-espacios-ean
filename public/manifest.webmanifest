@@ -1,0 +1,17 @@
+{
+  "name": "Acta de entrega de espacios",
+  "short_name": "Acta entrega",
+  "description": "Captura evidencias, firmas y genera actas de entrega en PDF.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f3f1eb",
+  "theme_color": "#162f2b",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

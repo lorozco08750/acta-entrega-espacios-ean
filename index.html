@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#162f2b" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Acta de entrega" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <title>Acta de entrega de espacios</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="app-header">
+        <div class="brand-mark" aria-hidden="true">E</div>
+        <div>
+          <p class="eyebrow">Gestión de Eventos</p>
+          <h1>Acta de entrega de espacios</h1>
+        </div>
+        <span id="save-status" class="save-status">Guardado local</span>
+      </header>
+
+      <nav class="stepper" aria-label="Progreso del acta">
+        <button class="step is-active" data-step-target="1"><span>1</span> Información</button>
+        <button class="step" data-step-target="2"><span>2</span> Espacios</button>
+        <button class="step" data-step-target="3"><span>3</span> Firmas</button>
+        <button class="step" data-step-target="4"><span>4</span> Finalizar</button>
+      </nav>
+
+      <main>
+        <form id="acta-form" novalidate>
+          <section class="form-step is-active" data-step="1">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Paso 1 de 4</p>
+                <h2>Información del evento</h2>
+                <p>Registra los datos que identificarán el acta.</p>
+              </div>
+              <span class="privacy-chip">Los datos permanecen en este dispositivo</span>
+            </div>
+
+            <div class="panel form-grid">
+              <label>
+                <span>Número de radicado <b>*</b></span>
+                <input name="radicado" autocomplete="off" required placeholder="Ej. 123456" />
+              </label>
+              <label>
+                <span>Fecha y hora de entrega <b>*</b></span>
+                <input name="fechaEntrega" type="datetime-local" required />
+              </label>
+              <label class="full-width">
+                <span>Nombre del evento <b>*</b></span>
+                <input name="nombreEvento" required placeholder="Ej. Congreso de innovación educativa" />
+              </label>
+              <label>
+                <span>Cliente o responsable que recibe <b>*</b></span>
+                <input name="cliente" required placeholder="Nombre completo" />
+              </label>
+              <label>
+                <span>Empresa u organización</span>
+                <input name="organizacion" placeholder="Opcional" />
+              </label>
+              <label class="full-width">
+                <span>Responsable que entrega <b>*</b></span>
+                <input name="responsableEntrega" required placeholder="Nombre completo" />
+              </label>
+            </div>
+          </section>
+
+          <section class="form-step" data-step="2">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Paso 2 de 4</p>
+                <h2>Espacios y evidencias</h2>
+                <p>Agrega cada espacio, toma sus fotografías y describe el estado de entrega.</p>
+              </div>
+              <span id="evidence-count" class="count-chip">0 espacios</span>
+            </div>
+
+            <div id="spaces-list" class="spaces-list"></div>
+            <button id="add-space" class="button button-secondary button-add" type="button">
+              <span aria-hidden="true">＋</span> Agregar otro espacio
+            </button>
+          </section>
+
+          <section class="form-step" data-step="3">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Paso 3 de 4</p>
+                <h2>Observaciones y firmas</h2>
+                <p>La persona que recibe puede firmar con el dedo o Apple Pencil.</p>
+              </div>
+            </div>
+
+            <div class="panel">
+              <label>
+                <span>Observaciones generales</span>
+                <textarea name="observacionesGenerales" rows="4" placeholder="Novedades generales de la entrega"></textarea>
+              </label>
+              <label class="acceptance">
+                <input name="aceptacion" type="checkbox" required />
+                <span>Declaro que recibo los espacios descritos en esta acta, en las condiciones registradas mediante las fotografías y observaciones adjuntas.</span>
+              </label>
+            </div>
+
+            <div class="signature-grid">
+              <article class="panel signature-card">
+                <div class="signature-title">
+                  <div>
+                    <p class="eyebrow">Recibe</p>
+                    <h3>Firma del cliente</h3>
+                  </div>
+                  <button type="button" class="text-button" data-clear-signature="cliente">Limpiar</button>
+                </div>
+                <canvas id="signature-cliente" class="signature-canvas"></canvas>
+                <label>
+                  <span>Identificación o cargo</span>
+                  <input name="identificacionCliente" placeholder="Opcional" />
+                </label>
+              </article>
+
+              <article class="panel signature-card">
+                <div class="signature-title">
+                  <div>
+                    <p class="eyebrow">Entrega</p>
+                    <h3>Firma del responsable</h3>
+                  </div>
+                  <button type="button" class="text-button" data-clear-signature="responsable">Limpiar</button>
+                </div>
+                <canvas id="signature-responsable" class="signature-canvas"></canvas>
+                <p class="signature-note">Firma opcional de quien realiza la entrega.</p>
+              </article>
+            </div>
+          </section>
+
+          <section class="form-step" data-step="4">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Paso 4 de 4</p>
+                <h2>Revisar y generar el acta</h2>
+                <p>Comprueba la información antes de crear el PDF definitivo.</p>
+              </div>
+            </div>
+
+            <div id="review" class="review-grid"></div>
+
+            <div class="panel final-panel">
+              <div>
+                <h3>Documento listo para generar</h3>
+                <p>El PDF incluirá los datos del evento, las fotografías, las descripciones y las firmas.</p>
+              </div>
+              <button id="generate-pdf" class="button button-primary button-large" type="button">
+                Generar acta en PDF
+              </button>
+            </div>
+
+            <div id="pdf-result" class="pdf-result" hidden>
+              <div>
+                <strong>PDF generado correctamente</strong>
+                <span id="pdf-filename"></span>
+              </div>
+              <div class="pdf-actions">
+                <button id="share-pdf" class="button button-secondary" type="button">Compartir</button>
+                <a id="download-pdf" class="button button-primary" download>Descargar PDF</a>
+              </div>
+            </div>
+          </section>
+
+          <footer class="form-navigation">
+            <button id="previous-step" class="button button-ghost" type="button" hidden>Anterior</button>
+            <button id="discard-draft" class="text-button danger" type="button">Borrar borrador</button>
+            <button id="next-step" class="button button-primary" type="button">Continuar</button>
+          </footer>
+        </form>
+      </main>
+    </div>
+
+    <template id="space-template">
+      <article class="space-card panel">
+        <div class="space-card-header">
+          <div class="space-number"></div>
+          <div>
+            <p class="eyebrow">Evidencia</p>
+            <h3>Espacio <span class="space-index"></span></h3>
+          </div>
+          <button type="button" class="icon-button remove-space" aria-label="Eliminar espacio">×</button>
+        </div>
+        <div class="space-fields">
+          <label>
+            <span>Espacio <b>*</b></span>
+            <select class="space-select" required></select>
+          </label>
+          <label class="custom-space-field" hidden>
+            <span>Nombre del espacio <b>*</b></span>
+            <input class="custom-space" placeholder="Escribe el nombre" />
+          </label>
+          <label class="full-width">
+            <span>Descripción del estado <b>*</b></span>
+            <textarea class="space-description" rows="3" required placeholder="Describe limpieza, mobiliario, equipos y cualquier novedad"></textarea>
+          </label>
+          <label class="full-width">
+            <span>Novedades o compromisos</span>
+            <textarea class="space-notes" rows="2" placeholder="Opcional"></textarea>
+          </label>
+        </div>
+        <div class="photos-heading">
+          <div>
+            <h4>Fotografías <b>*</b></h4>
+            <p>Toma una o varias fotografías del espacio.</p>
+          </div>
+          <label class="button button-camera">
+            <input class="photo-input" type="file" accept="image/*" capture="environment" />
+            <span aria-hidden="true">◎</span> Tomar o cargar foto
+          </label>
+        </div>
+        <div class="photo-grid"></div>
+        <p class="photo-empty">Aún no hay fotografías.</p>
+      </article>
+    </template>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
