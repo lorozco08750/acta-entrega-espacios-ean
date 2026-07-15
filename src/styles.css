@@ -26,6 +26,8 @@ body {
     linear-gradient(180deg, #f8f6f0 0%, #f1eee5 100%);
 }
 
+.auth-pending { visibility: hidden; }
+
 button, input, textarea, select { font: inherit; }
 button, .button, select, input[type='checkbox'] { touch-action: manipulation; }
 
@@ -77,6 +79,18 @@ p { color: var(--muted); line-height: 1.55; }
 
 .save-status::before { content: '●'; margin-right: 0.4rem; color: #6fbe98; }
 .save-status.is-saving::before { color: #f0bc77; }
+
+.account-controls { display: flex; align-items: center; gap: 0.65rem; margin-left: auto; }
+.current-user { max-width: 250px; overflow: hidden; color: #c8d8d3; font-size: 0.76rem; text-overflow: ellipsis; white-space: nowrap; }
+.header-button { min-height: 38px; padding: 0.45rem 0.7rem; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 10px; color: white; background: transparent; font-size: 0.76rem; font-weight: 700; cursor: pointer; }
+.header-button:hover { background: rgba(255, 255, 255, 0.1); }
+
+.admin-view { min-height: 100vh; }
+.admin-logout { margin-left: auto; }
+.admin-main { display: grid; min-height: calc(100vh - 92px); place-items: center; }
+.admin-card { width: min(100%, 620px); text-align: center; }
+.admin-card h2 { margin-top: 1rem; }
+.role-chip { display: inline-flex; padding: 0.45rem 0.75rem; border-radius: 999px; color: var(--brand); background: #e5eee9; font-size: 0.78rem; font-weight: 800; }
 
 .stepper {
   position: sticky;
@@ -301,6 +315,9 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); box-sha
   .brand-mark { flex-basis: 42px; height: 42px; }
   .save-status { font-size: 0; padding: 0.45rem; }
   .save-status::before { margin: 0; font-size: 0.8rem; }
+  .current-user { display: none; }
+  .account-controls { gap: 0.4rem; }
+  .header-button { padding-inline: 0.55rem; }
   main { padding: 0.8rem 1rem 4rem; }
   .section-heading, .photos-heading, .final-panel, .pdf-result { align-items: stretch; flex-direction: column; }
   .privacy-chip, .count-chip { align-self: start; }

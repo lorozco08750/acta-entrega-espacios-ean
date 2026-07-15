@@ -23,6 +23,7 @@ let generatedPdf = null;
 let generatedFilename = '';
 let saveTimer = null;
 const signatureBackups = { cliente: '', responsable: '' };
+let currentSession = null;
 
 const signaturePads = {
   cliente: new SignaturePad(document.querySelector('#signature-cliente'), {
@@ -464,6 +465,42 @@ async function sharePdf() {
   }
 }
 
+async function logout() {
+  document.querySelectorAll('[data-logout]').forEach((button) => { button.disabled = true; });
+  try {
+    await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
+  } finally {
+    window.location.replace('/login');
+  }
+}
+
+async function loadSession() {
+  if (import.meta.env.DEV) {
+    return { email: 'usuario.local@universidadean.edu.co', role: 'user' };
+  }
+  const response = await fetch('/api/session', {
+    credentials: 'same-origin',
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) {
+    window.location.replace(`/login?next=${encodeURIComponent(window.location.pathname)}`);
+    return null;
+  }
+  return response.json();
+}
+
+function showAuthenticatedView(session) {
+  document.body.classList.remove('auth-pending');
+  if (session.role === 'admin') {
+    document.querySelector('#admin-email').textContent = session.email;
+    document.querySelector('#admin-view').hidden = false;
+    return false;
+  }
+  document.querySelector('#current-user').textContent = session.email;
+  document.querySelector('#app').hidden = false;
+  return true;
+}
+
 async function discardDraft() {
   const confirmed = window.confirm('¿Deseas borrar el borrador y comenzar un acta nueva?');
   if (!confirmed) return;
@@ -516,11 +553,20 @@ previousButton.addEventListener('click', () => showStep(Math.max(currentStep - 1
 discardButton.addEventListener('click', discardDraft);
 document.querySelector('#generate-pdf').addEventListener('click', generatePdf);
 sharePdfButton.addEventListener('click', sharePdf);
+document.querySelectorAll('[data-logout]').forEach((button) => button.addEventListener('click', logout));
 window.addEventListener('resize', () => {
   if (currentStep === 3) resizeSignatures();
 });
 
 async function initialize() {
+  try {
+    currentSession = await loadSession();
+  } catch (error) {
+    console.error(error);
+    if (!import.meta.env.DEV) window.location.replace('/login');
+    return;
+  }
+  if (!currentSession || !showAuthenticatedView(currentSession)) return;
   setDefaultDate();
   resizeSignatures();
   const restored = await restoreDraft();
@@ -528,8 +574,8 @@ async function initialize() {
     spaces = [makeSpace()];
     renderSpaces();
   }
-  if ('serviceWorker' in navigator && import.meta.env.PROD) {
-    navigator.serviceWorker.register('./sw.js').catch(console.error);
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => registrations.forEach((registration) => registration.unregister()));
   }
 }
 

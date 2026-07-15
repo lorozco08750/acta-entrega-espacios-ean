@@ -11,15 +11,19 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <title>Acta de entrega de espacios</title>
   </head>
-  <body>
-    <div id="app">
+  <body class="auth-pending">
+    <div id="app" hidden>
       <header class="app-header">
         <div class="brand-mark" aria-hidden="true">E</div>
         <div>
           <p class="eyebrow">Gestión de Eventos</p>
           <h1>Acta de entrega de espacios</h1>
         </div>
-        <span id="save-status" class="save-status">Guardado local</span>
+        <div class="account-controls">
+          <span id="current-user" class="current-user"></span>
+          <span id="save-status" class="save-status">Guardado local</span>
+          <button class="header-button" type="button" data-logout>Cerrar sesión</button>
+        </div>
       </header>
 
       <nav class="stepper" aria-label="Progreso del acta">
@@ -174,6 +178,25 @@
             <button id="next-step" class="button button-primary" type="button">Continuar</button>
           </footer>
         </form>
+      </main>
+    </div>
+
+    <div id="admin-view" class="admin-view" hidden>
+      <header class="app-header">
+        <div class="brand-mark" aria-hidden="true">E</div>
+        <div>
+          <p class="eyebrow">Gestión de Eventos</p>
+          <h1>Acta de entrega de espacios</h1>
+        </div>
+        <button class="header-button admin-logout" type="button" data-logout>Cerrar sesión</button>
+      </header>
+      <main class="admin-main">
+        <section class="panel admin-card">
+          <span class="role-chip">Administrador</span>
+          <h2>Acceso administrativo</h2>
+          <p id="admin-email"></p>
+          <p>Este perfil administra el acceso, pero no está autorizado para diligenciar actas de entrega.</p>
+        </section>
       </main>
     </div>
 
