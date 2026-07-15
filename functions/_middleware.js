@@ -1,6 +1,15 @@
 import { readSession } from './lib/auth.js';
 
-const PUBLIC_PATHS = new Set(['/login', '/login.html', '/icon.svg', '/sw.js', '/api/login', '/api/logout']);
+const PUBLIC_PATHS = new Set([
+  '/login',
+  '/login.html',
+  '/icon.svg',
+  '/logo-ean-blanco.png',
+  '/logo-ean-negro.png',
+  '/sw.js',
+  '/api/login',
+  '/api/logout',
+]);
 
 export async function onRequest(context) {
   const url = new URL(context.request.url);
