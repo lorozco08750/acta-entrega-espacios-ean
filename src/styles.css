@@ -64,6 +64,7 @@ p { color: var(--muted); line-height: 1.55; }
   color: white;
   font-size: clamp(1.15rem, 2vw, 1.55rem);
   line-height: 1.12;
+  letter-spacing: normal;
   text-transform: none;
 }
 
