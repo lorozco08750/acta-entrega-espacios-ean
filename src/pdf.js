@@ -2,8 +2,9 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 const PAGE = [595.28, 841.89];
 const MARGIN = 48;
-const BRAND = rgb(0.086, 0.184, 0.169);
-const ACCENT = rgb(0.776, 0.478, 0.137);
+const BRAND = rgb(59 / 255, 172 / 255, 82 / 255);
+const HEADER = rgb(0, 0, 0);
+const ACCENT = rgb(0, 0, 0);
 const INK = rgb(0.12, 0.15, 0.14);
 const MUTED = rgb(0.4, 0.44, 0.42);
 const LINE = rgb(0.86, 0.88, 0.87);
@@ -42,22 +43,11 @@ function drawWrapped(page, text, options) {
   return y - lines.length * lineHeight;
 }
 
-function drawHeader(page, fonts, logo, title = 'ACTA DE ENTREGA DE ESPACIOS') {
-  page.drawRectangle({ x: 0, y: PAGE[1] - 92, width: PAGE[0], height: 92, color: BRAND });
-  page.drawText(title, { x: MARGIN, y: PAGE[1] - 45, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
-  page.drawText('Dirección de eventos y proyectos culturales', { x: MARGIN, y: PAGE[1] - 64, font: fonts.regular, size: 8, color: rgb(0.8, 0.88, 0.86) });
-  if (logo) {
-    const dimensions = fitImage(logo, 112, 48);
-    page.drawImage(logo, {
-      x: PAGE[0] - MARGIN - dimensions.width,
-      y: PAGE[1] - 70,
-      width: dimensions.width,
-      height: dimensions.height,
-    });
-  } else {
-    page.drawRectangle({ x: PAGE[0] - MARGIN - 42, y: PAGE[1] - 69, width: 42, height: 42, color: ACCENT });
-    page.drawText('E', { x: PAGE[0] - MARGIN - 29, y: PAGE[1] - 59, font: fonts.bold, size: 25, color: rgb(1, 1, 1) });
-  }
+function drawHeader(page, fonts, title = 'ACTA DE ENTREGA DE ESPACIOS') {
+  page.drawRectangle({ x: 0, y: PAGE[1] - 108, width: PAGE[0], height: 108, color: HEADER });
+  page.drawText(title, { x: MARGIN, y: PAGE[1] - 35, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
+  page.drawText('DIRECCIÓN DE EVENTOS Y', { x: MARGIN, y: PAGE[1] - 60, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
+  page.drawText('PROYECTOS CULTURALES', { x: MARGIN, y: PAGE[1] - 82, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
 }
 
 function drawFooter(page, fonts, pageNumber) {
@@ -83,21 +73,7 @@ function fitImage(image, maxWidth, maxHeight) {
   return { width: image.width * scale, height: image.height * scale };
 }
 
-async function loadHeaderLogo(pdf, suppliedBytes) {
-  try {
-    let bytes = suppliedBytes;
-    if (!bytes && typeof window !== 'undefined') {
-      const response = await fetch('/logo-ean-blanco.png');
-      if (!response.ok) return null;
-      bytes = new Uint8Array(await response.arrayBuffer());
-    }
-    return bytes ? pdf.embedPng(bytes) : null;
-  } catch {
-    return null;
-  }
-}
-
-export async function createActaPdf(data, options = {}) {
+export async function createActaPdf(data) {
   const pdf = await PDFDocument.create();
   const fonts = {
     regular: await pdf.embedFont(StandardFonts.Helvetica),
@@ -107,11 +83,9 @@ export async function createActaPdf(data, options = {}) {
   pdf.setSubject('Acta de entrega de espacios');
   pdf.setCreator('Aplicación Acta de Entrega de Espacios');
   pdf.setCreationDate(new Date());
-  const headerLogo = await loadHeaderLogo(pdf, options.logoBytes);
-
   let pageNumber = 1;
   let page = pdf.addPage(PAGE);
-  drawHeader(page, fonts, headerLogo);
+  drawHeader(page, fonts);
   let y = PAGE[1] - 132;
   page.drawText('INFORMACIÓN DE LA ENTREGA', { x: MARGIN, y, font: fonts.bold, size: 12, color: BRAND });
   y -= 30;
@@ -133,7 +107,7 @@ export async function createActaPdf(data, options = {}) {
     for (let photoIndex = 0; photoIndex < space.photos.length; photoIndex += 1) {
       pageNumber += 1;
       page = pdf.addPage(PAGE);
-      drawHeader(page, fonts, headerLogo, `EVIDENCIA · ESPACIO ${spaceIndex + 1}`);
+      drawHeader(page, fonts, `EVIDENCIA · ESPACIO ${spaceIndex + 1}`);
       let currentY = PAGE[1] - 128;
       page.drawText(clean(space.name).toUpperCase(), { x: MARGIN, y: currentY, font: fonts.bold, size: 18, color: BRAND });
       page.drawText(`Fotografía ${photoIndex + 1} de ${space.photos.length}`, { x: PAGE[0] - MARGIN - 95, y: currentY + 2, font: fonts.regular, size: 9, color: MUTED });
@@ -159,7 +133,7 @@ export async function createActaPdf(data, options = {}) {
 
   pageNumber += 1;
   page = pdf.addPage(PAGE);
-  drawHeader(page, fonts, headerLogo, 'ACEPTACIÓN Y FIRMAS');
+  drawHeader(page, fonts, 'ACEPTACIÓN Y FIRMAS');
   y = PAGE[1] - 132;
   page.drawText('OBSERVACIONES GENERALES', { x: MARGIN, y, font: fonts.bold, size: 8, color: MUTED });
   y = drawWrapped(page, data.observacionesGenerales || 'Sin observaciones adicionales.', { x: MARGIN, y: y - 18, font: fonts.regular, size: 10, maxWidth: PAGE[0] - MARGIN * 2 });
