@@ -43,16 +43,16 @@ function drawWrapped(page, text, options) {
   return y - lines.length * lineHeight;
 }
 
-function drawHeader(page, fonts, title = 'ACTA DE ENTREGA DE ESPACIOS') {
+function drawHeader(page, fonts, title = 'Formato producción de eventos.') {
   page.drawRectangle({ x: 0, y: PAGE[1] - 108, width: PAGE[0], height: 108, color: HEADER });
   page.drawText(title, { x: MARGIN, y: PAGE[1] - 35, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
-  page.drawText('DIRECCIÓN DE EVENTOS Y', { x: MARGIN, y: PAGE[1] - 60, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
-  page.drawText('PROYECTOS CULTURALES', { x: MARGIN, y: PAGE[1] - 78, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
+  page.drawText('Dirección de Eventos y', { x: MARGIN, y: PAGE[1] - 60, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
+  page.drawText('Proyectos Culturales', { x: MARGIN, y: PAGE[1] - 78, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
 }
 
 function drawFooter(page, fonts, pageNumber) {
   page.drawLine({ start: { x: MARGIN, y: 35 }, end: { x: PAGE[0] - MARGIN, y: 35 }, thickness: 0.6, color: LINE });
-  page.drawText(`Acta de entrega · Página ${pageNumber}`, { x: MARGIN, y: 20, font: fonts.regular, size: 8, color: MUTED });
+  page.drawText(`Formato producción de eventos · Página ${pageNumber}`, { x: MARGIN, y: 20, font: fonts.regular, size: 8, color: MUTED });
 }
 
 function drawField(page, fonts, label, value, x, y, width) {
@@ -79,9 +79,9 @@ export async function createActaPdf(data) {
     regular: await pdf.embedFont(StandardFonts.Helvetica),
     bold: await pdf.embedFont(StandardFonts.HelveticaBold),
   };
-  pdf.setTitle(`Acta de entrega ${clean(data.radicado)}`);
-  pdf.setSubject('Acta de entrega de espacios');
-  pdf.setCreator('Aplicación Acta de Entrega de Espacios');
+  pdf.setTitle(`Formato producción de eventos ${clean(data.radicado)}`);
+  pdf.setSubject('Formato producción de eventos');
+  pdf.setCreator('Aplicación Formato producción de eventos');
   pdf.setCreationDate(new Date());
   let pageNumber = 1;
   let page = pdf.addPage(PAGE);

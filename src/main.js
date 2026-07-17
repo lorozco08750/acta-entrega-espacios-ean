@@ -468,7 +468,7 @@ async function generatePdf() {
 async function sharePdf() {
   if (!generatedPdf) return;
   try {
-    await navigator.share({ files: [generatedPdf], title: 'Acta de entrega de espacios' });
+    await navigator.share({ files: [generatedPdf], title: 'Formato producción de eventos.' });
   } catch (error) {
     if (error.name !== 'AbortError') showToast('No fue posible abrir el menú de compartir.', 'error');
   }
