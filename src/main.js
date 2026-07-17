@@ -430,7 +430,12 @@ function pdfData() {
 }
 
 function safeFilename(value) {
-  return String(value || 'SIN-RADICADO').trim().replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 async function generatePdf() {
@@ -438,11 +443,15 @@ async function generatePdf() {
   button.disabled = true;
   button.textContent = 'Generando PDF…';
   try {
-    const bytes = await createActaPdf(pdfData());
-    generatedFilename = `Acta_Entrega_Espacios_${safeFilename(getFormData().radicado)}_${new Date().toISOString().slice(0, 10)}.pdf`;
+    const data = pdfData();
+    const bytes = await createActaPdf(data);
+    const radicado = safeFilename(data.radicado) || 'SIN-RADICADO';
+    const evento = safeFilename(data.nombreEvento) || 'SIN-NOMBRE-DE-EVENTO';
+    generatedFilename = `${radicado}-${evento}.pdf`;
     generatedPdf = new File([bytes], generatedFilename, { type: 'application/pdf' });
     if (downloadPdf.href) URL.revokeObjectURL(downloadPdf.href);
     downloadPdf.href = URL.createObjectURL(generatedPdf);
+    downloadPdf.download = generatedFilename;
     document.querySelector('#pdf-filename').textContent = generatedFilename;
     pdfResult.hidden = false;
     sharePdfButton.hidden = !(navigator.share && navigator.canShare?.({ files: [generatedPdf] }));
