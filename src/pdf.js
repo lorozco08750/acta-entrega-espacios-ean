@@ -45,7 +45,7 @@ function drawWrapped(page, text, options) {
 function drawHeader(page, fonts, logo, title = 'ACTA DE ENTREGA DE ESPACIOS') {
   page.drawRectangle({ x: 0, y: PAGE[1] - 92, width: PAGE[0], height: 92, color: BRAND });
   page.drawText(title, { x: MARGIN, y: PAGE[1] - 45, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
-  page.drawText('Dirección de eventos y Proyectos culturales', { x: MARGIN, y: PAGE[1] - 64, font: fonts.regular, size: 8, color: rgb(0.8, 0.88, 0.86) });
+  page.drawText('Dirección de eventos y proyectos culturales', { x: MARGIN, y: PAGE[1] - 64, font: fonts.regular, size: 8, color: rgb(0.8, 0.88, 0.86) });
   if (logo) {
     const dimensions = fitImage(logo, 112, 48);
     page.drawImage(logo, {
