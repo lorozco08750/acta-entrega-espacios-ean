@@ -16,6 +16,7 @@ const discardButton = document.querySelector('#discard-draft');
 const pdfResult = document.querySelector('#pdf-result');
 const downloadPdf = document.querySelector('#download-pdf');
 const sharePdfButton = document.querySelector('#share-pdf');
+const radicadoInput = form.elements.radicado;
 
 let currentStep = 1;
 let spaces = [];
@@ -278,7 +279,7 @@ function applyFormData(data = {}) {
     const field = form.elements[key];
     if (!field) return;
     if (field.type === 'checkbox') field.checked = Boolean(value);
-    else field.value = value || '';
+    else field.value = key === 'radicado' ? String(value || '').replace(/\D/g, '') : value || '';
   });
 }
 
@@ -555,6 +556,9 @@ Object.entries(signaturePads).forEach(([key, pad]) => pad.addEventListener('endS
   signatureBackups[key] = pad.toDataURL('image/png');
   scheduleSave();
 }));
+radicadoInput.addEventListener('input', () => {
+  radicadoInput.value = radicadoInput.value.replace(/\D/g, '');
+});
 form.addEventListener('input', scheduleSave);
 form.addEventListener('change', scheduleSave);
 nextButton.addEventListener('click', () => showStep(Math.min(currentStep + 1, 4)));
