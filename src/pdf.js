@@ -47,7 +47,7 @@ function drawHeader(page, fonts, title = 'ACTA DE ENTREGA DE ESPACIOS') {
   page.drawRectangle({ x: 0, y: PAGE[1] - 108, width: PAGE[0], height: 108, color: HEADER });
   page.drawText(title, { x: MARGIN, y: PAGE[1] - 35, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
   page.drawText('DIRECCIÓN DE EVENTOS Y', { x: MARGIN, y: PAGE[1] - 60, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
-  page.drawText('PROYECTOS CULTURALES', { x: MARGIN, y: PAGE[1] - 82, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
+  page.drawText('PROYECTOS CULTURALES', { x: MARGIN, y: PAGE[1] - 78, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
 }
 
 function drawFooter(page, fonts, pageNumber) {
