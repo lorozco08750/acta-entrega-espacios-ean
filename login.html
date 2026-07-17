@@ -11,11 +11,10 @@
       * { box-sizing: border-box; }
       body { display: grid; min-width: 320px; min-height: 100vh; margin: 0; padding: max(1.25rem, env(safe-area-inset-top)) 1.25rem max(1.25rem, env(safe-area-inset-bottom)); place-items: center; background: radial-gradient(circle at 90% 5%, rgba(59,172,82,.14), transparent 25rem), linear-gradient(180deg,#f8f6f0,#f1eee5); }
       main { width: min(100%, 440px); }
-      .brand { display: flex; align-items: center; gap: .85rem; margin-bottom: 1rem; }
-      .brand-logo { width: 158px; height: auto; object-fit: contain; }
-      .brand-copy { min-width: 0; padding-left: .85rem; border-left: 1px solid #b7b7b7; }
+      .brand { display: grid; gap: .85rem; margin-bottom: 1.25rem; }
+      .brand-logo { width: min(100%, 380px); height: auto; object-fit: contain; justify-self: center; }
+      .brand-copy { padding-top: .75rem; border-top: 1px solid #b7b7b7; text-align: center; }
       .brand p, h1 { margin: 0; }
-      .brand p { color: #000; font-size: 1.3rem; font-weight: 800; line-height: 1.12; letter-spacing: normal; }
       h1 { color: #000; font-size: 1.3rem; }
       .card { padding: clamp(1.5rem,5vw,2.25rem); border: 1px solid rgba(33,64,56,.1); border-radius: 24px; background: #fffefa; box-shadow: 0 16px 48px rgba(30,45,40,.1); }
       h2 { margin: 0 0 .45rem; color: #000; font-size: 1.75rem; }
@@ -34,7 +33,7 @@
   </head>
   <body>
     <main>
-      <div class="brand"><img class="brand-logo" src="/logo-ean-negro.png" alt="Universidad Ean" /><div class="brand-copy"><h1>Formato producción de eventos.</h1><p>Dirección de Eventos y Proyectos Culturales</p></div></div>
+      <div class="brand"><img class="brand-logo" src="/logo-ean-negro-horizontal.png" alt="Universidad Ean · Dirección de Eventos y Proyectos Culturales" /><div class="brand-copy"><h1>Formato producción de eventos.</h1></div></div>
       <section class="card">
         <h2>Ingresar</h2>
         <p class="intro">Usa el correo y la contraseña asignados para tu perfil.</p>
