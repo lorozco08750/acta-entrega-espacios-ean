@@ -5,6 +5,7 @@ const PUBLIC_PATHS = new Set([
   '/login.html',
   '/icon.svg',
   '/logo-ean-blanco.png',
+  '/logo-ean-blanco-horizontal.png',
   '/logo-ean-negro.png',
   '/sw.js',
   '/api/login',

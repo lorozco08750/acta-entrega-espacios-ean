@@ -46,7 +46,7 @@ function drawWrapped(page, text, options) {
 function drawHeader(page, fonts, logo, title = 'Formato producción de eventos.') {
   page.drawRectangle({ x: 0, y: PAGE[1] - 108, width: PAGE[0], height: 108, color: HEADER });
   if (logo) {
-    const dimensions = fitImage(logo, 96, 42);
+    const dimensions = fitImage(logo, 230, 44);
     page.drawImage(logo, {
       x: MARGIN,
       y: PAGE[1] - 75,
@@ -55,14 +55,17 @@ function drawHeader(page, fonts, logo, title = 'Formato producción de eventos.'
     });
   }
   page.drawLine({
-    start: { x: 158, y: PAGE[1] - 18 },
-    end: { x: 158, y: PAGE[1] - 90 },
+    start: { x: 294, y: PAGE[1] - 28 },
+    end: { x: 294, y: PAGE[1] - 80 },
     thickness: 0.7,
     color: rgb(0.68, 0.68, 0.68),
   });
-  page.drawText(title, { x: 176, y: PAGE[1] - 35, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
-  page.drawText('Dirección de Eventos y', { x: 176, y: PAGE[1] - 60, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
-  page.drawText('Proyectos Culturales', { x: 176, y: PAGE[1] - 78, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
+  if (title === 'Formato producción de eventos.') {
+    page.drawText('Formato producción', { x: 310, y: PAGE[1] - 46, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
+    page.drawText('de eventos.', { x: 310, y: PAGE[1] - 66, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
+  } else {
+    page.drawText(title, { x: 310, y: PAGE[1] - 56, font: fonts.bold, size: 14, color: rgb(1, 1, 1) });
+  }
 }
 
 function drawFooter(page, fonts, pageNumber) {
@@ -92,7 +95,7 @@ async function loadHeaderLogo(pdf, suppliedBytes) {
   try {
     let bytes = suppliedBytes;
     if (!bytes && typeof window !== 'undefined') {
-      const response = await fetch('/logo-ean-blanco.png');
+      const response = await fetch('/logo-ean-blanco-horizontal.png');
       if (!response.ok) return null;
       bytes = new Uint8Array(await response.arrayBuffer());
     }
