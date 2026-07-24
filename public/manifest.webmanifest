@@ -1,7 +1,7 @@
 {
-  "name": "Acta de entrega de espacios",
-  "short_name": "Acta entrega",
-  "description": "Captura evidencias, firmas y genera actas de entrega en PDF.",
+  "name": "Formato producción de eventos.",
+  "short_name": "Producción eventos",
+  "description": "Captura evidencias, firmas y genera formatos de producción de eventos en PDF.",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f3f1eb",

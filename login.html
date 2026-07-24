@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <title>Ingresar · Formato producción de eventos</title>
+    <style>
+      :root { font-family: "Open Sans", Arial, system-ui, sans-serif; color: #1d2926; background: #f4f1e9; }
+      * { box-sizing: border-box; }
+      body { display: grid; min-width: 320px; min-height: 100vh; margin: 0; padding: max(1.25rem, env(safe-area-inset-top)) 1.25rem max(1.25rem, env(safe-area-inset-bottom)); place-items: center; background: radial-gradient(circle at 90% 5%, rgba(59,172,82,.14), transparent 25rem), linear-gradient(180deg,#f8f6f0,#f1eee5); }
+      main { width: min(100%, 440px); }
+      .brand { display: grid; gap: .85rem; margin-bottom: 1.25rem; }
+      .brand-logo { width: min(100%, 380px); height: auto; object-fit: contain; justify-self: center; }
+      .brand-copy { padding-top: .75rem; border-top: 1px solid #b7b7b7; text-align: center; }
+      .brand p, h1 { margin: 0; }
+      h1 { color: #000; font-size: 1.3rem; }
+      .card { padding: clamp(1.5rem,5vw,2.25rem); border: 1px solid rgba(33,64,56,.1); border-radius: 24px; background: #fffefa; box-shadow: 0 16px 48px rgba(30,45,40,.1); }
+      h2 { margin: 0 0 .45rem; color: #000; font-size: 1.75rem; }
+      .intro { margin: 0 0 1.5rem; color: #66736f; line-height: 1.5; }
+      form, label { display: grid; gap: .55rem; }
+      form { gap: 1rem; }
+      label span { color: #000; font-size: .86rem; font-weight: 700; }
+      input { width: 100%; min-height: 54px; padding: .8rem .9rem; border: 1px solid #ccd4cf; border-radius: 12px; font: inherit; background: white; }
+      input:focus { border-color: #3bac52; outline: 3px solid rgba(59,172,82,.15); }
+      button { min-height: 54px; margin-top: .35rem; border: 0; border-radius: 12px; color: white; background: #000; font: 700 1rem inherit; cursor: pointer; }
+      button:disabled { opacity: .6; cursor: wait; }
+      .error { margin: 0; padding: .8rem; border-radius: 10px; color: #8c3024; background: #fff0ec; font-size: .86rem; }
+      .note { margin: 1rem 0 0; color: #66736f; font-size: .78rem; line-height: 1.45; text-align: center; }
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="brand"><img class="brand-logo" src="/logo-ean-negro-horizontal.png" alt="Universidad Ean · Dirección de Eventos y Proyectos Culturales" /><div class="brand-copy"><h1>Formato producción de eventos.</h1></div></div>
+      <section class="card">
+        <h2>Ingresar</h2>
+        <p class="intro">Usa el correo y la contraseña asignados para tu perfil.</p>
+        <form id="login-form">
+          <label><span>Correo institucional</span><input name="email" type="email" autocomplete="username" inputmode="email" required placeholder="usuario@universidadean.edu.co" /></label>
+          <label><span>Contraseña</span><input name="password" type="password" autocomplete="current-password" required /></label>
+          <p id="error" class="error" role="alert" hidden></p>
+          <button type="submit">Ingresar</button>
+        </form>
+      </section>
+      <p class="note">El acceso está limitado a los perfiles autorizados. Las actas y fotografías permanecen en este dispositivo.</p>
+    </main>
+    <script>
+      navigator.serviceWorker?.register('/sw.js').catch(() => {});
+      const form = document.querySelector('#login-form');
+      const errorBox = document.querySelector('#error');
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const button = form.querySelector('button');
+        button.disabled = true;
+        button.textContent = 'Verificando…';
+        errorBox.hidden = true;
+        try {
+          const values = Object.fromEntries(new FormData(form));
+          const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(values) });
+          if (!response.ok) throw new Error(response.status === 429 ? 'Espera un momento antes de volver a intentarlo.' : 'Correo o contraseña incorrectos.');
+          const next = new URLSearchParams(location.search).get('next');
+          location.replace(next && next.startsWith('/') && !next.startsWith('//') ? next : '/');
+        } catch (error) {
+          errorBox.textContent = error.message || 'No fue posible iniciar sesión.';
+          errorBox.hidden = false;
+        } finally {
+          button.disabled = false;
+          button.textContent = 'Ingresar';
+        }
+      });
+    </script>
+  </body>
+</html>

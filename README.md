@@ -1,4 +1,4 @@
-# Acta de entrega de espacios
+# Formato producción de eventos.
 
 Aplicación web local para registrar la entrega de espacios desde un iPad. Permite capturar fotografías, descripciones y firmas, conservar un borrador en el dispositivo y generar un PDF sin enviar información a servicios externos.
 

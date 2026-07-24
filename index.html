@@ -3,23 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#162f2b" />
+    <meta name="theme-color" content="#000000" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Acta de entrega" />
+    <meta name="apple-mobile-web-app-title" content="Producción de eventos" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-    <title>Acta de entrega de espacios</title>
+    <title>Formato producción de eventos.</title>
   </head>
-  <body>
-    <div id="app">
+  <body class="auth-pending">
+    <div id="app" hidden>
       <header class="app-header">
-        <div class="brand-mark" aria-hidden="true">E</div>
-        <div>
-          <p class="eyebrow">Gestión de Eventos</p>
-          <h1>Acta de entrega de espacios</h1>
+        <img class="brand-logo" src="/logo-ean-blanco-horizontal.png" alt="Universidad Ean" />
+        <div class="header-title">
+          <h1>Formato producción de eventos.</h1>
         </div>
-        <span id="save-status" class="save-status">Guardado local</span>
+        <div class="account-controls">
+          <span id="current-user" class="current-user"></span>
+          <span id="save-status" class="save-status">Guardado local</span>
+          <button class="header-button" type="button" data-logout>Cerrar sesión</button>
+        </div>
       </header>
 
       <nav class="stepper" aria-label="Progreso del acta">
@@ -44,7 +47,7 @@
             <div class="panel form-grid">
               <label>
                 <span>Número de radicado <b>*</b></span>
-                <input name="radicado" autocomplete="off" required placeholder="Ej. 123456" />
+                <input name="radicado" inputmode="numeric" pattern="[0-9]+" autocomplete="off" required placeholder="Ej. 123456" title="Escribe únicamente números" />
               </label>
               <label>
                 <span>Fecha y hora de entrega <b>*</b></span>
@@ -152,18 +155,19 @@
                 <p>El PDF incluirá los datos del evento, las fotografías, las descripciones y las firmas.</p>
               </div>
               <button id="generate-pdf" class="button button-primary button-large" type="button">
-                Generar acta en PDF
+                Preparando informe…
               </button>
             </div>
 
             <div id="pdf-result" class="pdf-result" hidden>
               <div>
-                <strong>PDF generado correctamente</strong>
+                <strong id="pdf-status">Preparando el informe</strong>
                 <span id="pdf-filename"></span>
+                <p id="pdf-help">No cierres esta pantalla.</p>
               </div>
-              <div class="pdf-actions">
+              <div id="pdf-actions" class="pdf-actions" hidden>
                 <button id="share-pdf" class="button button-secondary" type="button">Compartir</button>
-                <a id="download-pdf" class="button button-primary" download>Descargar PDF</a>
+                <a id="download-pdf" class="button button-primary" download>Abrir o descargar PDF</a>
               </div>
             </div>
           </section>
@@ -174,6 +178,24 @@
             <button id="next-step" class="button button-primary" type="button">Continuar</button>
           </footer>
         </form>
+      </main>
+    </div>
+
+    <div id="admin-view" class="admin-view" hidden>
+      <header class="app-header">
+        <img class="brand-logo" src="/logo-ean-blanco-horizontal.png" alt="Universidad Ean" />
+        <div class="header-title">
+          <h1>Formato producción de eventos.</h1>
+        </div>
+        <button class="header-button admin-logout" type="button" data-logout>Cerrar sesión</button>
+      </header>
+      <main class="admin-main">
+        <section class="panel admin-card">
+          <span class="role-chip">Administrador</span>
+          <h2>Acceso administrativo</h2>
+          <p id="admin-email"></p>
+          <p>Este perfil administra el acceso, pero no está autorizado para diligenciar actas de entrega.</p>
+        </section>
       </main>
     </div>
 
