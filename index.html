@@ -155,18 +155,19 @@
                 <p>El PDF incluirá los datos del evento, las fotografías, las descripciones y las firmas.</p>
               </div>
               <button id="generate-pdf" class="button button-primary button-large" type="button">
-                Generar acta en PDF
+                Preparando informe…
               </button>
             </div>
 
             <div id="pdf-result" class="pdf-result" hidden>
               <div>
-                <strong>PDF generado correctamente</strong>
+                <strong id="pdf-status">Preparando el informe</strong>
                 <span id="pdf-filename"></span>
+                <p id="pdf-help">No cierres esta pantalla.</p>
               </div>
-              <div class="pdf-actions">
+              <div id="pdf-actions" class="pdf-actions" hidden>
                 <button id="share-pdf" class="button button-secondary" type="button">Compartir</button>
-                <a id="download-pdf" class="button button-primary" download>Descargar PDF</a>
+                <a id="download-pdf" class="button button-primary" download>Abrir o descargar PDF</a>
               </div>
             </div>
           </section>

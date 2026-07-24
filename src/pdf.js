@@ -10,11 +10,40 @@ const MUTED = rgb(0.4, 0.44, 0.42);
 const LINE = rgb(0.86, 0.88, 0.87);
 
 function clean(value) {
-  return String(value || '').trim();
+  return String(value || '').normalize('NFC').trim();
+}
+
+function safeTextForFont(value, font) {
+  const replacements = new Map([
+    ['\t', ' '],
+    ['\u00a0', ' '],
+    ['\u2010', '-'],
+    ['\u2011', '-'],
+    ['\u2212', '-'],
+    ['\u2018', "'"],
+    ['\u2019', "'"],
+    ['\u201c', '"'],
+    ['\u201d', '"'],
+  ]);
+  let result = '';
+  for (const original of clean(value)) {
+    if (original === '\n' || original === '\r') {
+      result += original;
+      continue;
+    }
+    const character = replacements.get(original) || original;
+    try {
+      font.encodeText(character);
+      result += character;
+    } catch {
+      result += '?';
+    }
+  }
+  return result;
 }
 
 function wrapText(text, font, size, maxWidth) {
-  const paragraphs = clean(text).split(/\n/);
+  const paragraphs = safeTextForFont(text, font).split(/\n/);
   const lines = [];
   paragraphs.forEach((paragraph, paragraphIndex) => {
     const words = paragraph.split(/\s+/).filter(Boolean);
@@ -142,17 +171,38 @@ export async function createActaPdf(data, options = {}) {
       page = pdf.addPage(PAGE);
       drawHeader(page, fonts, headerLogo, `EVIDENCIA · ESPACIO ${spaceIndex + 1}`);
       let currentY = PAGE[1] - 128;
-      page.drawText(clean(space.name).toUpperCase(), { x: MARGIN, y: currentY, font: fonts.bold, size: 18, color: BRAND });
+      page.drawText(safeTextForFont(space.name, fonts.bold).toUpperCase(), { x: MARGIN, y: currentY, font: fonts.bold, size: 18, color: BRAND });
       page.drawText(`Fotografía ${photoIndex + 1} de ${space.photos.length}`, { x: PAGE[0] - MARGIN - 95, y: currentY + 2, font: fonts.regular, size: 9, color: MUTED });
       currentY -= 28;
 
-      const image = await embedImage(pdf, space.photos[photoIndex].blob);
-      const dimensions = fitImage(image, PAGE[0] - MARGIN * 2, 440);
-      const imageX = (PAGE[0] - dimensions.width) / 2;
-      const imageY = currentY - dimensions.height;
-      page.drawRectangle({ x: imageX - 4, y: imageY - 4, width: dimensions.width + 8, height: dimensions.height + 8, color: rgb(0.94, 0.94, 0.93) });
-      page.drawImage(image, { x: imageX, y: imageY, width: dimensions.width, height: dimensions.height });
-      currentY = imageY - 28;
+      try {
+        const image = await embedImage(pdf, space.photos[photoIndex].blob);
+        const dimensions = fitImage(image, PAGE[0] - MARGIN * 2, 440);
+        const imageX = (PAGE[0] - dimensions.width) / 2;
+        const imageY = currentY - dimensions.height;
+        page.drawRectangle({ x: imageX - 4, y: imageY - 4, width: dimensions.width + 8, height: dimensions.height + 8, color: rgb(0.94, 0.94, 0.93) });
+        page.drawImage(image, { x: imageX, y: imageY, width: dimensions.width, height: dimensions.height });
+        currentY = imageY - 28;
+      } catch (error) {
+        console.warn('No fue posible insertar una fotografía en el PDF.', error);
+        const placeholderHeight = 220;
+        const imageY = currentY - placeholderHeight;
+        page.drawRectangle({
+          x: MARGIN,
+          y: imageY,
+          width: PAGE[0] - MARGIN * 2,
+          height: placeholderHeight,
+          color: rgb(0.95, 0.95, 0.95),
+        });
+        page.drawText('FOTOGRAFÍA NO DISPONIBLE', {
+          x: MARGIN + 135,
+          y: imageY + 108,
+          font: fonts.bold,
+          size: 12,
+          color: MUTED,
+        });
+        currentY = imageY - 28;
+      }
       page.drawText('DESCRIPCIÓN DEL ESTADO', { x: MARGIN, y: currentY, font: fonts.bold, size: 8, color: MUTED });
       currentY = drawWrapped(page, space.description, { x: MARGIN, y: currentY - 17, font: fonts.regular, size: 10, maxWidth: PAGE[0] - MARGIN * 2 });
       if (clean(space.notes)) {
@@ -180,14 +230,25 @@ export async function createActaPdf(data, options = {}) {
   const signatureY = y - signatureHeight;
   const drawSignature = async (dataUrl, x, label, name, detail) => {
     if (dataUrl) {
-      const signature = await pdf.embedPng(dataUrl);
-      const dimensions = fitImage(signature, signatureWidth - 20, signatureHeight - 18);
-      page.drawImage(signature, { x: x + (signatureWidth - dimensions.width) / 2, y: signatureY + 9, width: dimensions.width, height: dimensions.height });
+      try {
+        const signature = await pdf.embedPng(dataUrl);
+        const dimensions = fitImage(signature, signatureWidth - 20, signatureHeight - 18);
+        page.drawImage(signature, { x: x + (signatureWidth - dimensions.width) / 2, y: signatureY + 9, width: dimensions.width, height: dimensions.height });
+      } catch (error) {
+        console.warn('No fue posible insertar una firma en el PDF.', error);
+        page.drawText('Firma guardada no disponible', {
+          x: x + 32,
+          y: signatureY + 45,
+          font: fonts.regular,
+          size: 8,
+          color: MUTED,
+        });
+      }
     }
     page.drawLine({ start: { x, y: signatureY }, end: { x: x + signatureWidth, y: signatureY }, thickness: 0.8, color: INK });
     page.drawText(label, { x, y: signatureY - 18, font: fonts.bold, size: 8, color: MUTED });
-    page.drawText(clean(name) || '—', { x, y: signatureY - 36, font: fonts.regular, size: 10, color: INK });
-    if (clean(detail)) page.drawText(clean(detail), { x, y: signatureY - 52, font: fonts.regular, size: 8, color: MUTED });
+    page.drawText(safeTextForFont(name, fonts.regular) || '—', { x, y: signatureY - 36, font: fonts.regular, size: 10, color: INK });
+    if (clean(detail)) page.drawText(safeTextForFont(detail, fonts.regular), { x, y: signatureY - 52, font: fonts.regular, size: 8, color: MUTED });
   };
   await drawSignature(data.signatureCliente, MARGIN, 'RECIBE', data.cliente, data.identificacionCliente);
   await drawSignature(data.signatureResponsable, 332, 'ENTREGA', data.responsableEntrega, '');

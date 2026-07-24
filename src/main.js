@@ -1,6 +1,13 @@
 import SignaturePad from 'signature_pad';
 import { SPACES, CUSTOM_SPACE_VALUE } from './catalog.js';
-import { clearDraft, loadDraft, saveDraft } from './storage.js';
+import {
+  clearDraft,
+  clearGeneratedPdf,
+  loadDraft,
+  loadGeneratedPdf,
+  saveDraft,
+  saveGeneratedPdf,
+} from './storage.js';
 import { createActaPdf } from './pdf.js';
 import './styles.css';
 
@@ -16,12 +23,17 @@ const discardButton = document.querySelector('#discard-draft');
 const pdfResult = document.querySelector('#pdf-result');
 const downloadPdf = document.querySelector('#download-pdf');
 const sharePdfButton = document.querySelector('#share-pdf');
+const pdfStatus = document.querySelector('#pdf-status');
+const pdfHelp = document.querySelector('#pdf-help');
+const pdfActions = document.querySelector('#pdf-actions');
 const radicadoInput = form.elements.radicado;
 
 let currentStep = 1;
 let spaces = [];
 let generatedPdf = null;
 let generatedFilename = '';
+let generatedFingerprint = '';
+let pdfPreparationPromise = null;
 let saveTimer = null;
 const signatureBackups = { cliente: '', responsable: '' };
 let currentSession = null;
@@ -109,7 +121,11 @@ function collectDraft() {
   };
 }
 
-function scheduleSave() {
+function scheduleSave({ invalidatePdf = true } = {}) {
+  if (invalidatePdf) {
+    generatedFingerprint = '';
+    if (currentStep !== 4) pdfResult.hidden = true;
+  }
   window.clearTimeout(saveTimer);
   saveStatus.textContent = 'Guardando…';
   saveStatus.classList.add('is-saving');
@@ -124,6 +140,15 @@ function scheduleSave() {
       showToast('No fue posible guardar el borrador local.', 'error');
     }
   }, 500);
+}
+
+async function persistDraftNow() {
+  window.clearTimeout(saveTimer);
+  saveStatus.textContent = 'Guardando…';
+  saveStatus.classList.add('is-saving');
+  await saveDraft(collectDraft());
+  saveStatus.textContent = 'Guardado local';
+  saveStatus.classList.remove('is-saving');
 }
 
 function makeSpace() {
@@ -409,9 +434,12 @@ function showStep(step, options = {}) {
       });
     }, 0);
   }
-  if (currentStep === 4) renderReview();
+  if (currentStep === 4) {
+    renderReview();
+    window.setTimeout(() => preparePdf(), 0);
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  if (save) scheduleSave();
+  if (save) scheduleSave({ invalidatePdf: false });
 }
 
 function pdfData() {
@@ -439,31 +467,167 @@ function safeFilename(value) {
     .replace(/^-+|-+$/g, '');
 }
 
-async function generatePdf() {
+function pdfFingerprint(data) {
+  return JSON.stringify({
+    radicado: data.radicado,
+    fechaEntrega: data.fechaEntrega,
+    nombreEvento: data.nombreEvento,
+    cliente: data.cliente,
+    organizacion: data.organizacion,
+    responsableEntrega: data.responsableEntrega,
+    observacionesGenerales: data.observacionesGenerales,
+    identificacionCliente: data.identificacionCliente,
+    spaces: data.spaces.map((space) => ({
+      name: space.name,
+      description: space.description,
+      notes: space.notes,
+      photos: space.photos.map((photo) => ({
+        id: photo.id,
+        name: photo.name,
+        size: photo.blob?.size || 0,
+        type: photo.blob?.type || '',
+      })),
+    })),
+    signatureClienteLength: data.signatureCliente?.length || 0,
+    signatureResponsableLength: data.signatureResponsable?.length || 0,
+  });
+}
+
+function canSharePdf(file) {
+  if (typeof navigator.share !== 'function') return false;
+  try {
+    return typeof navigator.canShare !== 'function' || navigator.canShare({ files: [file] });
+  } catch {
+    return false;
+  }
+}
+
+function presentGeneratedPdf(blob, filename, fingerprint, { recovered = false } = {}) {
+  generatedFilename = filename;
+  generatedFingerprint = fingerprint || '';
+  generatedPdf = blob instanceof File
+    ? blob
+    : new File([blob], filename, { type: 'application/pdf' });
+  if (downloadPdf.href) URL.revokeObjectURL(downloadPdf.href);
+  downloadPdf.href = URL.createObjectURL(generatedPdf);
+  downloadPdf.download = generatedFilename;
+  document.querySelector('#pdf-filename').textContent = generatedFilename;
+  pdfStatus.textContent = recovered ? 'PDF recuperado en este dispositivo' : 'Informe preparado y protegido';
+  pdfHelp.textContent = recovered
+    ? 'Puedes volver a guardarlo sin generar nuevamente.'
+    : 'Al tocar “Guardar informe” se abrirá el menú del iPad. Elige Guardar en Archivos.';
+  pdfActions.hidden = false;
+  pdfResult.hidden = false;
+  sharePdfButton.hidden = !canSharePdf(generatedPdf);
+  const button = document.querySelector('#generate-pdf');
+  button.disabled = false;
+  button.textContent = 'Guardar informe en el iPad';
+}
+
+function explainPdfError(error) {
+  const message = String(error?.message || error || '').toLowerCase();
+  if (message.includes('memory') || message.includes('allocation') || error instanceof RangeError) {
+    return 'El iPad se quedó sin memoria al procesar las fotografías. Cierra otras pestañas y vuelve a intentarlo.';
+  }
+  if (message.includes('jpeg') || message.includes('jpg') || message.includes('png') || message.includes('image')) {
+    return 'Una fotografía guardada está dañada o no puede leerse. El borrador sigue protegido.';
+  }
+  if (message.includes('encode') || message.includes('winansi') || message.includes('font')) {
+    return 'El informe contiene un símbolo que no puede imprimirse. La aplicación intentará reemplazarlo de forma segura.';
+  }
+  return 'No fue posible preparar el informe. El borrador y las firmas continúan guardados en este dispositivo.';
+}
+
+async function preparePdf({ force = false } = {}) {
+  if (pdfPreparationPromise) return pdfPreparationPromise;
+  const data = pdfData();
+  const fingerprint = pdfFingerprint(data);
+  if (!force && generatedPdf && generatedFingerprint === fingerprint) return generatedPdf;
   const button = document.querySelector('#generate-pdf');
   button.disabled = true;
-  button.textContent = 'Generando PDF…';
+  button.textContent = 'Preparando informe…';
+  pdfStatus.textContent = 'Preparando el informe';
+  pdfHelp.textContent = 'No cierres esta pantalla. Tus datos ya están guardados localmente.';
+  pdfActions.hidden = true;
+  pdfResult.hidden = false;
+
+  pdfPreparationPromise = (async () => {
+    try {
+      await persistDraftNow();
+      if (navigator.storage?.persist) {
+        navigator.storage.persist().catch(() => {});
+      }
+      const bytes = await createActaPdf(data);
+      const radicado = safeFilename(data.radicado) || 'SIN-RADICADO';
+      const evento = safeFilename(data.nombreEvento) || 'SIN-NOMBRE-DE-EVENTO';
+      const filename = `${radicado}-${evento}.pdf`;
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      await saveGeneratedPdf({
+        blob,
+        filename,
+        fingerprint,
+        radicado: data.radicado,
+        nombreEvento: data.nombreEvento,
+        generatedAt: new Date().toISOString(),
+      });
+      presentGeneratedPdf(blob, filename, fingerprint);
+      showToast('Informe preparado. Toca “Guardar informe” para elegir la carpeta.');
+      return generatedPdf;
+    } catch (error) {
+      console.error(error);
+      generatedPdf = null;
+      generatedFingerprint = '';
+      pdfStatus.textContent = 'No se pudo preparar el informe';
+      pdfHelp.textContent = explainPdfError(error);
+      pdfActions.hidden = true;
+      pdfResult.hidden = false;
+      button.disabled = false;
+      button.textContent = 'Reintentar generación';
+      showToast('El PDF no se generó, pero el borrador permanece guardado.', 'error');
+      return null;
+    } finally {
+      pdfPreparationPromise = null;
+    }
+  })();
+
+  return pdfPreparationPromise;
+}
+
+async function restoreGeneratedPdf() {
   try {
-    const data = pdfData();
-    const bytes = await createActaPdf(data);
-    const radicado = safeFilename(data.radicado) || 'SIN-RADICADO';
-    const evento = safeFilename(data.nombreEvento) || 'SIN-NOMBRE-DE-EVENTO';
-    generatedFilename = `${radicado}-${evento}.pdf`;
-    generatedPdf = new File([bytes], generatedFilename, { type: 'application/pdf' });
-    if (downloadPdf.href) URL.revokeObjectURL(downloadPdf.href);
-    downloadPdf.href = URL.createObjectURL(generatedPdf);
-    downloadPdf.download = generatedFilename;
-    document.querySelector('#pdf-filename').textContent = generatedFilename;
-    pdfResult.hidden = false;
-    sharePdfButton.hidden = !(navigator.share && navigator.canShare?.({ files: [generatedPdf] }));
-    showToast('El acta fue generada correctamente.');
+    const record = await loadGeneratedPdf();
+    if (!record?.blob || !record.filename) return false;
+    const formData = getFormData();
+    if (record.radicado !== formData.radicado || record.nombreEvento !== formData.nombreEvento) return false;
+    presentGeneratedPdf(record.blob, record.filename, record.fingerprint, { recovered: true });
+    return true;
   } catch (error) {
     console.error(error);
-    showToast('Ocurrió un error al generar el PDF.', 'error');
-  } finally {
-    button.disabled = false;
-    button.textContent = 'Generar nuevamente';
+    return false;
   }
+}
+
+async function savePreparedPdf() {
+  if (!generatedPdf) {
+    await preparePdf({ force: true });
+    if (generatedPdf) showToast('Informe listo. Toca nuevamente para guardarlo.');
+    return;
+  }
+  if (canSharePdf(generatedPdf)) {
+    try {
+      await navigator.share({
+        files: [generatedPdf],
+        title: 'Formato producción de eventos.',
+      });
+      showToast('Menú de guardado abierto correctamente.');
+      return;
+    } catch (error) {
+      if (error.name === 'AbortError') return;
+      console.error(error);
+      showToast('Safari no abrió el menú. Usa “Descargar PDF”.', 'error');
+    }
+  }
+  downloadPdf.click();
 }
 
 async function sharePdf() {
@@ -514,7 +678,8 @@ function showAuthenticatedView(session) {
 async function discardDraft() {
   const confirmed = window.confirm('¿Deseas borrar el borrador y comenzar un acta nueva?');
   if (!confirmed) return;
-  await clearDraft();
+  await Promise.all([clearDraft(), clearGeneratedPdf()]);
+  if (downloadPdf.href) URL.revokeObjectURL(downloadPdf.href);
   form.reset();
   signaturePads.cliente.clear();
   signaturePads.responsable.clear();
@@ -522,6 +687,8 @@ async function discardDraft() {
   signatureBackups.responsable = '';
   spaces = [makeSpace()];
   generatedPdf = null;
+  generatedFilename = '';
+  generatedFingerprint = '';
   pdfResult.hidden = true;
   setDefaultDate();
   renderSpaces();
@@ -564,7 +731,7 @@ form.addEventListener('change', scheduleSave);
 nextButton.addEventListener('click', () => showStep(Math.min(currentStep + 1, 4)));
 previousButton.addEventListener('click', () => showStep(Math.max(currentStep - 1, 1), { validate: false }));
 discardButton.addEventListener('click', discardDraft);
-document.querySelector('#generate-pdf').addEventListener('click', generatePdf);
+document.querySelector('#generate-pdf').addEventListener('click', savePreparedPdf);
 sharePdfButton.addEventListener('click', sharePdf);
 document.querySelectorAll('[data-logout]').forEach((button) => button.addEventListener('click', logout));
 window.addEventListener('resize', () => {
@@ -586,7 +753,10 @@ async function initialize() {
   if (!restored) {
     spaces = [makeSpace()];
     renderSpaces();
+  } else {
+    await restoreGeneratedPdf();
   }
+  if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then((registrations) => registrations.forEach((registration) => registration.unregister()));
   }
